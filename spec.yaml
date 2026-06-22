@@ -62,7 +62,7 @@ variant_matrix:
     overrides:
       spawn: { density: 0.65, shape_set: extended, big_piece_weight_mult: 2.0 }
       scoring: { clear_base_factor: 8, combo_curve: quadratic }
-      difficulty: { dda_enabled: false, god_mode_after_losses: 99 }
+      difficulty: { dda_enabled: false }
 
 # ---------------------------------------------------------------------------
 # ACCEPTANCE CRITERIA — EARS syntax + few-shot samples.

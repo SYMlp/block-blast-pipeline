@@ -36,15 +36,14 @@
     "difficulty": {
       "type": "object",
       "properties": {
-        "dda_enabled":     { "type": "boolean", "default": true },
-        "dda_high_occupancy":  { "type": "number", "default": 0.75 },
-        "dda_low_occupancy":   { "type": "number", "default": 0.35 },
-        "god_mode_after_losses": { "type": "integer", "default": 3 }
+        "dda_enabled":     { "type": "boolean", "default": true, "description": "true=按棋盘占用率动态调整发片权重；false=静态权重" },
+        "dda_high_occupancy":  { "type": "number", "default": 0.75, "description": "占用率超过此阈值→偏发小片救援" },
+        "dda_low_occupancy":   { "type": "number", "default": 0.35, "description": "占用率低于此阈值→偏发大片挑战" }
       }
     },
     "juice": {
       "type": "object",
-      "description": "手感参数——每个字段就是一个 A/B 维度",
+      "description": "手感/渲染层参数（被 renderer/CanvasRenderer.js 读取，不影响玩法逻辑）",
       "properties": {
         "line_clear_trauma":  { "type": "number", "default": 0.3 },
         "hit_stop_ms":        { "type": "integer", "default": 50 },

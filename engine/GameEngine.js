@@ -2,8 +2,8 @@
 // Drives board + pieces + scorer; the renderer reads its state, the harness
 // drives it step by step. Randomness is injected so sims are reproducible.
 
-import { createBoard, canPlace, canPlaceAnywhere, place, clearLines, occupancy } from './board.js';
-import { buildPool, newPiece, COLORS } from './pieces.js';
+import { createBoard, canPlace, canPlaceAnywhere, place, clearLines, occupancy, prefillDensity } from './board.js';
+import { buildPool, ddaPool, newPiece, COLORS } from './pieces.js';
 import { placementScore, clearScore } from './scorer.js';
 
 // Mulberry32 — tiny deterministic PRNG. Same seed => same game.
@@ -26,12 +26,18 @@ export class GameEngine {
     this.previewCount = config.spawn.preview_count ?? 3;
     this.colorCount = COLORS.length;
     this.pool = buildPool(config.spawn);
+    this.density = config.spawn.density ?? 0;
+    this.difficulty = config.difficulty ?? {};
     this.rng = rng || makeRng(seed);
     this.reset();
   }
 
   reset() {
     this.board = createBoard(this.width, this.height);
+    // density: pre-fill the opening board to a target occupancy. Higher density
+    // = more crowded start = harder. prefillDensity guards against completing a
+    // line (no instant clear) and against an unplayable opening.
+    prefillDensity(this.board, this.density, this.rng);
     this.score = 0;
     this.combo = 0;
     this.gameOver = false;
@@ -45,7 +51,11 @@ export class GameEngine {
   // Mirrors Block Blast's anti-deadlock rule; without it the headless sim
   // would log spurious dead games and poison the metrics.
   refillTray() {
-    const draw = () => Array.from({ length: this.previewCount }, () => newPiece(this.pool, this.colorCount, this.rng));
+    // DDA: bias the draw pool by current occupancy (crowded → small pieces to
+    // rescue, sparse → big pieces to challenge). dda_enabled=false uses the
+    // static pool. Pool is recomputed each refill so it tracks the live board.
+    const pool = ddaPool(this.pool, occupancy(this.board), this.difficulty);
+    const draw = () => Array.from({ length: this.previewCount }, () => newPiece(pool, this.colorCount, this.rng));
     let tray = draw();
     for (let attempt = 0; attempt < 30; attempt++) {
       if (tray.some((p) => canPlaceAnywhere(this.board, p.shape))) break;

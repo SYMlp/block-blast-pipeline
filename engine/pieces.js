@@ -51,6 +51,36 @@ export function buildPool(spawn) {
   return pool;
 }
 
+// DDA: re-weight the draw pool by current board occupancy.
+// - occupancy > high  → board is crowded → favor SMALL pieces (rescue).
+// - occupancy < low   → board is sparse  → favor BIG pieces (challenge).
+// - in between (or dda disabled) → the static base pool is used unchanged.
+// Returns a (possibly new) array of shapes to draw from.
+export function ddaPool(basePool, occupancy, difficulty) {
+  if (!difficulty || difficulty.dda_enabled === false) return basePool;
+  const high = difficulty.dda_high_occupancy ?? 0.75;
+  const low = difficulty.dda_low_occupancy ?? 0.35;
+
+  let smallMult = 1;
+  let bigMult = 1;
+  if (occupancy > high) {
+    smallMult = 3; bigMult = 0; // crowded: only small pieces — pure rescue
+  } else if (occupancy < low) {
+    smallMult = 0.5; bigMult = 3; // sparse: push big pieces — challenge
+  } else {
+    return basePool; // neutral band: no adjustment
+  }
+
+  const out = [];
+  for (const sh of basePool) {
+    const isBig = sh.n >= 4;
+    const reps = Math.round((isBig ? bigMult : smallMult) * 1);
+    for (let i = 0; i < reps; i++) out.push(sh);
+  }
+  // Never return an empty pool (e.g. bigMult=0 on a pool of only big pieces).
+  return out.length > 0 ? out : basePool;
+}
+
 // Materialize one piece from the pool. `rng` returns [0,1).
 export function newPiece(pool, colorCount, rng) {
   const sh = pool[Math.floor(rng() * pool.length)];

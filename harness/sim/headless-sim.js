@@ -1,8 +1,10 @@
 // Harness Layer 2 — headless integration sim. A deterministic greedy agent
-// plays N full games per variant in Node (no DOM). This is the minimal version
-// of Hungry Studio's "Block AI Robot": same idea (an automated player pre-screens
-// a variant before it ships), simpler policy (greedy ~60% aligned vs their deep
-// model ~80%). Run: node harness/sim/headless-sim.js [--games 200] [--variant id]
+// plays N full games per variant in Node (no DOM). Purpose: a regression gate
+// (0 crashes, every step under one frame's budget) plus a measured behavior
+// fingerprint per variant (avgScore / avgSteps / avgLines), so config-driven
+// differences are observed, not asserted. The agent is intentionally simple —
+// it is a fuzzer/probe for engine robustness, not a player-skill model.
+// Run: node harness/sim/headless-sim.js [--games 200] [--variant id]
 
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -122,11 +124,19 @@ function main() {
   }
   console.log('-'.repeat(72));
 
+  const FRAME_MS = 16; // one frame at 60fps — the per-step budget.
+  const worstAll = results.reduce((m, r) => Math.max(m, r.worstStepMs), 0);
+  const tooSlow = results.filter((r) => r.worstStepMs >= FRAME_MS);
   if (totalCrashes > 0) {
     console.error(`\nGATE FAILED: ${totalCrashes} crash(es) across all variants.`);
     process.exit(1);
   }
-  console.log(`\nGATE PASSED: 0 crashes across ${variants.length} variant(s).`);
+  if (tooSlow.length > 0) {
+    console.error(`\nGATE FAILED: ${tooSlow.length} variant(s) exceeded the ${FRAME_MS}ms/step budget: ` +
+      tooSlow.map((r) => `${r.id}(${r.worstStepMs.toFixed(2)}ms)`).join(', '));
+    process.exit(1);
+  }
+  console.log(`\nGATE PASSED: 0 crashes, worst step ${worstAll.toFixed(2)}ms < ${FRAME_MS}ms across ${variants.length} variant(s).`);
 }
 
 main();

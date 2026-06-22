@@ -98,12 +98,12 @@
   <!-- FLOW STRIP -->
   <nav class="flow" aria-label="流程总览">
     <a class="step" href="#s1"><div class="num">1</div><div class="meta"><div class="ic">🔬</div><div class="lbl">深度研究</div><div class="sub">摸清领域成熟方案</div></div></a>
-    <a class="step" href="#s2"><div class="num">2</div><div class="meta"><div class="ic">🧩</div><div class="lbl">拆解 SOC 流程</div><div class="sub">复用已验证状态机</div></div></a>
+    <a class="step" href="#s2"><div class="num">2</div><div class="meta"><div class="ic">🧩</div><div class="lbl">复用派单状态机</div><div class="sub">先跑通的练手项目</div></div></a>
     <a class="step" href="#s3"><div class="num">3</div><div class="meta"><div class="ic">🔀</div><div class="lbl">类比替换</div><div class="sub">SOC → 游戏场景</div></div></a>
     <a class="step" href="#s4"><div class="num">4</div><div class="meta"><div class="ic">🛠️</div><div class="lbl">搭建流程</div><div class="sub">可执行流水线</div></div></a>
     <a class="step" href="#s5"><div class="num">5</div><div class="meta"><div class="ic">✅</div><div class="lbl">验证看结果</div><div class="sub">真跑，不是嘴说</div></div></a>
   </nav>
-  <p class="flow-note">↑ 点任意环节看详细说明 · 核心思路：<b style="color:var(--gold)">不是从零做游戏，是把我已跑通的 SOC 派单流水线换个 payload</b></p>
+  <p class="flow-note">↑ 点任意环节看详细说明 · 核心思路：<b style="color:var(--gold)">不是从零做游戏，是把我先跑通的派单状态机换个 payload</b></p>
 
   <!-- STEP 1 -->
   <section id="s1">
@@ -117,26 +117,26 @@
 
   <!-- STEP 2 -->
   <section id="s2">
-    <div class="stag"><div class="badge">2</div><h2>拆解已有的 SOC 流程</h2><span class="en">Decompose the proven flow</span></div>
+    <div class="stag"><div class="badge">2</div><h2>复用已跑通的派单状态机</h2><span class="en">Reuse the dispatch state machine</span></div>
     <div class="row">
-      <div class="k">做了什么</div><div class="v">把我之前跑通的企业级 SOC / 智能派单 Agent 的状态机拆出来：<b>告警 → 分类 → 派单 → 核验 → 失败重派</b>，外加治理五件套（护栏 / 人工确认 / 自动评估 / 可观测 / 成本控制）。</div>
-      <div class="k">为什么从它起</div><div class="v">这是一个<b>已经在真实企业场景验证过</b>的状态机，带完整治理。不从零设计，直接拿成熟资产当地基。</div>
+      <div class="k">做了什么</div><div class="v">把我在另一个 agent 项目（指标告警自动派单，自己写的练手项目）里先跑通的状态机拿来当骨架：<b>告警 → 分类 → 派单 → 核验 → 失败重派</b>，外加治理五件套（护栏 / 人工确认 / 自动评估 / 可观测 / 成本控制）。</div>
+      <div class="k">为什么从它起</div><div class="v">这套「意图 → 生成 → 验证 → 不过就修」状态机我已经在那个项目里跑通过，带完整治理。不从零设计，直接拿来当地基换个处理对象。</div>
     </div>
-    <div class="why"><b>关键：</b>这套状态机来自一个已经跑通的企业级项目，不是为这个 demo 新写的——这里只是给它换个处理对象。</div>
+    <div class="why"><b>说明：</b>那个派单项目是我自己写的、本机能跑的练手项目，不在本仓里、也没有可点的公开链接——这里只是说明本流水线的骨架是从那儿搬来的，不是为这个 demo 从零现搭。</div>
   </section>
 
   <!-- STEP 3 -->
   <section id="s3">
     <div class="stag"><div class="badge">3</div><h2>类比替换到游戏生成场景</h2><span class="en">Analogy-map to game variants</span></div>
-    <p style="color:#dfe3f7;font-size:14.5px;margin-top:12px">把 SOC 流程的每个节点，一对一替换成"生成游戏变体"的节点。同一套架构，换了处理对象：</p>
+    <p style="color:#dfe3f7;font-size:14.5px;margin-top:12px">把派单流程的每个节点，一对一替换成"生成游戏变体"的节点。同一套架构，换了处理对象：</p>
     <table>
-      <thead><tr><th>SOC 派单（已验证）</th><th></th><th>游戏变体生成（本作）</th></tr></thead>
+      <thead><tr><th>指标派单（先跑通的练手项目）</th><th></th><th>游戏变体生成（本作）</th></tr></thead>
       <tbody>
         <tr><td class="soc">告警分类</td><td class="arrow">→</td><td class="game">解析 Spec（parse_spec）</td></tr>
-        <tr><td class="soc">自动派单</td><td class="arrow">→</td><td class="game">生成变体代码 / config（generate）</td></tr>
-        <tr><td class="soc">核验工单</td><td class="arrow">→</td><td class="game">跑三层 Harness（run_harness）</td></tr>
-        <tr><td class="soc">失败重派</td><td class="arrow">→</td><td class="game">失败自修复（reflect_and_fix ≤3 次）</td></tr>
-        <tr><td class="soc">护栏 / 人工确认 / 可观测</td><td class="arrow">→</td><td class="game">整套原样迁移</td></tr>
+        <tr><td class="soc">自动派单</td><td class="arrow">→</td><td class="game">生成变体 config（generate）</td></tr>
+        <tr><td class="soc">核验工单</td><td class="arrow">→</td><td class="game">跑 Harness 门禁（run_harness）</td></tr>
+        <tr><td class="soc">失败重派</td><td class="arrow">→</td><td class="game">失败自修复（reflect_and_fix，骨架/未接入）</td></tr>
+        <tr><td class="soc">护栏 / 人工确认 / 可观测</td><td class="arrow">→</td><td class="game">同思路迁移</td></tr>
       </tbody>
     </table>
     <div class="why"><b>为什么有效：</b>两个场景是<b>同构</b>的——都是"接收一个意图 → 自动产出 → 验证 → 不过就修"。同构意味着<b>换 payload、不换架构</b>，已有经验直接复用。</div>
@@ -151,9 +151,9 @@
     </p>
     <ul>
       <li><b>纯 JS 引擎</b>（零依赖、无 DOM）—— 所有玩法参数从 config 读，能在命令行 headless 跑，才能被自动验证。</li>
-      <li><b>一张 config schema</b> —— 棋盘 / 生成 / 计分 / 难度 / 手感全收敛成参数，每个字段就是一个 A/B 维度。</li>
+      <li><b>一张 config schema</b> —— 棋盘 / 生成 / 计分 / 难度（玩法层）+ 手感（渲染层）全收敛成参数。</li>
       <li><b>4 个变体</b> —— control / 紧凑 / 宽松 / 高难，各是同一份 schema 的不同取值。</li>
-      <li><b>三层 Harness</b> —— 属性测试 + headless AI 玩家 + LLM 打分（详见下一步）。</li>
+      <li><b>Harness</b> —— L1 属性测试 + L2 headless 模拟门禁（真跑、进 CI）；L3 LLM 打分是骨架、未接入。</li>
       <li><b>CI/CD</b> —— 每次提交自动跑门禁，不过不让合并。</li>
     </ul>
     <div class="why"><b>为什么这样拆：</b>"参数化"是贯穿全线的脊柱——把游戏的一切可变量收敛成一份 config，流水线才能自动流动、一键喷出 N 个变体。</div>
@@ -163,23 +163,23 @@
   <section id="s5">
     <div class="stag"><div class="badge">5</div><h2>验证看结果</h2><span class="en">Verify &amp; results</span></div>
     <div class="row">
-      <div class="k">属性测试</div><div class="v"><span class="pill">11 项全过</span> 随机play下恒成立的契约（棋盘尺寸恒定、消行无残留、分数单调不减、每个变体符合 schema…）。</div>
-      <div class="k">headless AI 玩家</div><div class="v">确定性贪心 Agent，对每个变体跑 200 局——这是大厂"AI 模拟玩家上线前预筛"的最简版。</div>
+      <div class="k">属性测试</div><div class="v"><span class="pill">11 项全过</span> = 6 条属性不变式（随机 play 下恒成立的契约）+ 5 条样例断言（棋盘尺寸恒定、放置守恒、消行无残留、分数单调不减、每个变体符合 schema…）。</div>
+      <div class="k">headless 模拟</div><div class="v">确定性贪心 Agent 对每个变体跑 200 局。它是个探针/健壮性门禁（0 崩溃 + 每步 &lt; 16ms），同时测出每个变体的行为指纹——不是模拟真实玩家技能。</div>
     </div>
     <table class="results">
       <thead><tr><th>变体</th><th>平均分</th><th>平均存活步数</th><th>结果是否符合声明</th></tr></thead>
       <tbody>
-        <tr><td class="game">control 对照</td><td>297.5</td><td>51.4</td><td>基线</td></tr>
-        <tr><td class="game">compact 紧凑</td><td>377.7</td><td>41.2</td><td>每步分最高、节奏最快 ✅</td></tr>
-        <tr><td class="game">relaxed 宽松</td><td class="hi">799.3</td><td class="hi">166.7</td><td>喘息多、跑最久 ✅</td></tr>
-        <tr><td class="game">hard-mode 高难</td><td>355.9</td><td>33.0</td><td>最短最残暴 ✅</td></tr>
+        <tr><td class="game">control 对照</td><td>71.8</td><td>12.3</td><td>基线</td></tr>
+        <tr><td class="game">compact 紧凑</td><td>147.4</td><td>11.4</td><td>每步分最高、节奏最快 ✅</td></tr>
+        <tr><td class="game">relaxed 宽松</td><td class="hi">358.6</td><td class="hi">75.3</td><td>喘息多、跑最久 ✅</td></tr>
+        <tr><td class="game">hard-mode 高难</td><td>63.9</td><td>4.8</td><td>最短最残暴 ✅</td></tr>
       </tbody>
     </table>
-    <div class="why"><b>这张表才是重点：</b>4 个变体的行为是被<b>测出来的</b>、且都符合各自声明意图——证明 config-driven 变体真在改游戏行为，不是换皮。200 局 × 4 变体，<b>0 崩溃</b>，单步耗时全部 &lt; 16ms（一帧）。Harness 让流水线能无人化——验证比生成更快且可信。</div>
+    <div class="why"><b>这张表才是重点：</b>4 个变体的行为是被<b>测出来的</b>、且都符合各自声明意图——证明 config-driven 变体真在改游戏行为，不是换皮。200 局 × 4 变体，<b>0 崩溃</b>，单步耗时全部 &lt; 16ms（一帧）。density（开局预填）和 DDA（按占用率调发片）这两个参数现在真被引擎读取——开局预填让总步数比"空盘开局"更短，正是参数生效的直接证据。</div>
   </section>
 
   <footer>
-    一份参数化 Spec，喷出 N 个经验证的变体 —— 把单变体交付从天级压到分钟级。<br>
+    一份参数化 Spec，喷出 N 个经验证的变体 —— 验证从人手逐个测变成一键跑门禁。<br>
     <a href="./index.html?variant=compact">在线玩</a> ·
     <a href="https://github.com/SYMlp/block-blast-pipeline">源码与文档</a>
   </footer>

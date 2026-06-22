@@ -59,30 +59,34 @@ describe('Invariant 1 — board is always WxH', () => {
   });
 });
 
-describe('Invariant 2 — placement fills exactly the piece cells', () => {
-  it('after a legal placement, every placed cell is filled (non -1)', () => {
+describe('Invariant 2 — placement conserves cells (placed = added + cleared)', () => {
+  it('net filled-cell delta == piece.cellCount minus cells removed by clears', () => {
     fc.assert(
       fc.property(fc.integer({ min: 1, max: 1 << 20 }), (seed) => {
         const eng = new GameEngine(control, { seed });
         const moves = eng.legalMoves();
         if (moves.length === 0) return; // game over at spawn (extremely rare)
+        const countFilled = (b) => { let n = 0; for (const row of b) for (const v of row) if (v !== -1) n++; return n; };
         const m = moves[0];
         const piece = eng.tray[m.trayIndex];
-        const cells = piece.shape.map(([dr, dc]) => [m.row + dr, m.col + dc]);
-        eng.applyMove(m.trayIndex, m.row, m.col);
-        // Each placed cell is either still filled OR was cleared as part of a
-        // completed line (became -1). It must NOT be left in an inconsistent
-        // half-state — we assert it's a valid cell value.
-        for (const [r, c] of cells) {
-          expect(eng.board[r][c] === -1 || eng.board[r][c] >= 0).toBe(true);
-        }
+        const filledBefore = countFilled(eng.board);
+        const result = eng.applyMove(m.trayIndex, m.row, m.col);
+        const filledAfter = countFilled(eng.board);
+        const cleared = result.clearedCells.size;
+        // Conservation: we add exactly piece.cellCount cells, then clearing
+        // removes `cleared` of them. So the net change in filled count must be
+        // exactly (cellCount - cleared) — this fails if the placement writes the
+        // wrong number of cells, double-writes, or the clear miscounts.
+        expect(filledAfter - filledBefore).toBe(piece.cellCount - cleared);
       }),
       { numRuns: 100 }
     );
   });
 
-  it('on an empty board, placement writes 1 per cell and clears nothing', () => {
-    const eng = new GameEngine(control, { seed: 7 });
+  it('on an empty board (density 0), placement writes exactly cellCount and clears nothing', () => {
+    // Force an empty opening so the first placement can't complete a line.
+    const emptyCfg = { ...control, spawn: { ...control.spawn, density: 0 } };
+    const eng = new GameEngine(emptyCfg, { seed: 7 });
     const moves = eng.legalMoves();
     const m = moves[0];
     const piece = eng.tray[m.trayIndex];
