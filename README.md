@@ -9,12 +9,50 @@
 **🎮 在线可玩（点开即玩，切变体看行为差异）：** https://symlp.github.io/block-blast-pipeline/?variant=compact
 　切 `?variant=control | compact | relaxed | hard-mode` —— 同一份引擎，四种行为。
 
+**🏛️ 我们怎么造出来的（一图看懂的流程引导）：** **https://symlp.github.io/block-blast-pipeline/process.html**
+
+---
+
+## 0. 流程引导：这个 demo 是怎么一步步造出来的
+
+> 核心思路：**不是从零做游戏，是把我已经跑通的企业级 SOC 派单流水线，换个 payload 落到"游戏变体生成"场景。**
+
+```mermaid
+flowchart LR
+    A["① 深度研究<br/>摸清领域成熟方案"] --> B["② 拆解 SOC 流程<br/>复用已验证状态机"]
+    B --> C["③ 类比替换<br/>SOC → 游戏场景"]
+    C --> D["④ 搭建可执行流程<br/>Spec→引擎→Harness→变体"]
+    D --> E["⑤ 验证看结果<br/>11 测试 + 200局×4变体 0崩溃"]
+```
+
+| # | 环节 | 做了什么 | 为什么这么做 |
+|---|---|---|---|
+| 1 | **深度研究** | 6 路并行调研：手感 / 玩法 / A·B 变体 / SDD / Harness / Agent 架构 | 每一环都有成熟工业方法，先摸清 state-of-the-art，不重复造轮子 |
+| 2 | **拆解 SOC 流程** | 拆出已跑通的「告警→分类→派单→核验→失败重派」状态机 + 治理五件套 | 复用已验证的企业级资产当地基，不从零设计 |
+| 3 | **类比替换** | 把每个 SOC 节点一对一换成「游戏变体生成」节点 | 两场景同构 → 换 payload、不换架构，经验直接复用 |
+| 4 | **搭建可执行流程** | Spec → config → 纯 JS 引擎 → 三层 Harness → 4 变体 → CI | 一切可变量收敛进一份 config，流水线才能自动流动 |
+| 5 | **验证看结果** | 11 属性测试全过 + 4 变体×200 局 0 崩溃、行为实测显著不同 | Harness 让流水线无人化：验证比生成更快且可信 |
+
+**步骤 ③ 的同构替换（这是整件事的承重墙）：**
+
+| SOC 派单（已验证） | → | 游戏变体生成（本作） |
+|---|:-:|---|
+| 告警分类 | → | 解析 Spec（`parse_spec`） |
+| 自动派单 | → | 生成变体 config（`generate`） |
+| 核验工单 | → | 跑三层 Harness（`run_harness`） |
+| 失败重派 | → | 失败自修复（`reflect_and_fix` ≤3） |
+| 护栏 / 人工确认 / 可观测 | → | 整套原样迁移 |
+
+完整的「办事大厅」式图文流程引导见 **[process.html](https://symlp.github.io/block-blast-pipeline/process.html)**。
+
+---
+
 ## TL;DR（给 30 秒读者 / 机器初筛）
 
 - **问题：** 休闲游戏一年跑上万次 A/B 实验、日均 300+，人手写变体到不了这个量级。
 - **方案：** Spec(YAML) → AI 生成 → Harness 三层验证 → N 个 config 变体 → CI/CD。
 - **技术栈：** 纯 JS 引擎（零依赖、可 headless 测）+ Vitest/fast-check 属性测试 + Node headless AI 玩家 + LangGraph 编排 + claude CLI。
-- **可玩 demo：** 起本地静态服务后打开 `index.html`，切 `?variant=control|compact|relaxed|hard-mode` 看**同一份引擎跑出不同行为**。
+- **可玩 demo：** [在线点开即玩](https://symlp.github.io/block-blast-pipeline/?variant=compact)（切 `?variant=` 看同一引擎跑出不同行为）；本地跑见 §6。
 
 ---
 

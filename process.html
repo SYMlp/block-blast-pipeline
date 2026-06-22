@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Block Blast Pipeline · 我们怎么造出来的（流程引导）</title>
+<style>
+  :root{
+    --bg:#161d33; --bg2:#1f1840; --card:#1e2640; --card2:#242c4d;
+    --ink:#eef0ff; --muted:#9aa3c7; --line:rgba(255,255,255,.10);
+    --gold:#ffd23f; --green:#7ee787; --blue:#4dabf7; --pink:#f783ac;
+    --maxw:920px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:linear-gradient(165deg,#161d33 0%,#1f1840 55%,#2a1a4d 100%);
+    background-attachment:fixed; color:var(--ink); line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:40px 20px 80px}
+  /* header */
+  header{text-align:center;padding:24px 0 8px}
+  .kicker{font-size:13px;letter-spacing:2px;color:var(--gold);font-weight:700;text-transform:uppercase}
+  h1{font-size:30px;font-weight:800;margin:10px 0 8px;letter-spacing:.5px}
+  .lead{color:var(--muted);font-size:15.5px;max-width:640px;margin:0 auto}
+  .links{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+  .btn{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-weight:700;font-size:14px;
+    padding:11px 20px;border-radius:999px;transition:transform .1s, box-shadow .1s}
+  .btn:active{transform:scale(.96)}
+  .btn-gold{background:var(--gold);color:#161d33;box-shadow:0 6px 18px rgba(255,210,63,.3)}
+  .btn-ghost{background:rgba(255,255,255,.07);color:var(--ink);border:1px solid var(--line)}
+  /* flow strip */
+  .flow{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin:44px 0 12px;position:relative}
+  .step{position:relative;text-align:center;padding:0 6px;text-decoration:none;color:inherit}
+  .step .num{width:46px;height:46px;border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:18px;background:var(--card2);border:2px solid var(--line);transition:all .15s;position:relative;z-index:2}
+  .step:hover .num{border-color:var(--gold);color:var(--gold);transform:translateY(-3px)}
+  .step .ic{font-size:20px;line-height:1}
+  .step .lbl{font-size:13px;font-weight:700;margin-top:2px}
+  .step .sub{font-size:11px;color:var(--muted);margin-top:3px}
+  /* connector line behind the circles */
+  .flow::before{content:"";position:absolute;top:23px;left:10%;right:10%;height:2px;
+    background:linear-gradient(90deg,var(--gold),var(--blue),var(--green));opacity:.5;z-index:1}
+  .flow-note{text-align:center;color:var(--muted);font-size:12.5px;margin-bottom:36px}
+  /* section cards */
+  section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px 26px 22px;margin:18px 0;
+    scroll-margin-top:20px}
+  .stag{display:inline-flex;align-items:center;gap:9px;margin-bottom:6px}
+  .stag .badge{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-weight:800;background:var(--gold);color:#161d33;font-size:15px}
+  .stag h2{font-size:20px;font-weight:800}
+  .stag .en{color:var(--muted);font-weight:600;font-size:13px}
+  .row{display:grid;grid-template-columns:auto 1fr;gap:10px 14px;margin-top:14px}
+  .row .k{color:var(--gold);font-weight:700;font-size:13.5px;white-space:nowrap;padding-top:1px}
+  .row .v{font-size:14.5px;color:#dfe3f7}
+  .why{margin-top:14px;padding:12px 15px;background:rgba(126,231,135,.07);border-left:3px solid var(--green);border-radius:8px;
+    font-size:14px;color:#cfe9d4}
+  .why b{color:var(--green)}
+  ul{margin:8px 0 0 2px;padding-left:18px}
+  li{margin:4px 0;font-size:14px;color:#dfe3f7}
+  /* mapping table */
+  table{width:100%;border-collapse:collapse;margin-top:14px;font-size:14px;display:block;overflow-x:auto}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+  th{color:var(--muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+  td.soc{color:var(--blue);font-weight:600}
+  td.arrow{color:var(--gold);text-align:center;font-weight:800}
+  td.game{color:var(--gold);font-weight:600}
+  .results td{font-variant-numeric:tabular-nums}
+  .results .hi{color:var(--green);font-weight:700}
+  .pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:rgba(126,231,135,.15);color:var(--green)}
+  footer{text-align:center;color:var(--muted);font-size:13px;margin-top:40px;padding-top:24px;border-top:1px solid var(--line)}
+  footer a{color:var(--gold);text-decoration:none}
+  @media(max-width:640px){
+    .flow{grid-template-columns:1fr;gap:4px}
+    .flow::before{display:none}
+    .step{display:flex;align-items:center;gap:14px;text-align:left;padding:8px 0;border-bottom:1px solid var(--line)}
+    .step .num{margin:0}
+    .step .meta{flex:1}
+    h1{font-size:24px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">办事流程 · 我们怎么造出来的</div>
+    <h1>Block Blast Pipeline</h1>
+    <p class="lead">把"一份参数化 Spec"自动喷成"多个经验证的 A/B 游戏变体"的 AI Coding 流水线。<br>
+       这页讲清楚：为了做出它，我们一步步做了哪几件事，每件事为什么这么做。</p>
+    <div class="links">
+      <a class="btn btn-gold" href="./index.html?variant=compact">🎮 在线玩一把</a>
+      <a class="btn btn-ghost" href="https://github.com/SYMlp/block-blast-pipeline">📦 看源码</a>
+    </div>
+  </header>
+
+  <!-- FLOW STRIP -->
+  <nav class="flow" aria-label="流程总览">
+    <a class="step" href="#s1"><div class="num">1</div><div class="meta"><div class="ic">🔬</div><div class="lbl">深度研究</div><div class="sub">摸清领域成熟方案</div></div></a>
+    <a class="step" href="#s2"><div class="num">2</div><div class="meta"><div class="ic">🧩</div><div class="lbl">拆解 SOC 流程</div><div class="sub">复用已验证状态机</div></div></a>
+    <a class="step" href="#s3"><div class="num">3</div><div class="meta"><div class="ic">🔀</div><div class="lbl">类比替换</div><div class="sub">SOC → 游戏场景</div></div></a>
+    <a class="step" href="#s4"><div class="num">4</div><div class="meta"><div class="ic">🛠️</div><div class="lbl">搭建流程</div><div class="sub">可执行流水线</div></div></a>
+    <a class="step" href="#s5"><div class="num">5</div><div class="meta"><div class="ic">✅</div><div class="lbl">验证看结果</div><div class="sub">真跑，不是嘴说</div></div></a>
+  </nav>
+  <p class="flow-note">↑ 点任意环节看详细说明 · 核心思路：<b style="color:var(--gold)">不是从零做游戏，是把我已跑通的 SOC 派单流水线换个 payload</b></p>
+
+  <!-- STEP 1 -->
+  <section id="s1">
+    <div class="stag"><div class="badge">1</div><h2>深度研究</h2><span class="en">Deep Research</span></div>
+    <div class="row">
+      <div class="k">做了什么</div><div class="v">开 6 路并行深度调研，覆盖：游戏手感工程化 · 方块消除玩法/数值 · A/B 变体批量生产 · Spec-Driven Development · Harness 工程 · Coding Agent 架构。</div>
+      <div class="k">产出</div><div class="v">一份综合研究报告 + 一份可执行施工图（哪步先做、config 长什么样、Harness 怎么搭）。</div>
+    </div>
+    <div class="why"><b>为什么这么做：</b>这条流水线的每一环，2025–2026 年都已经有成熟的工业方法和工具（spec-kit / Harness Engineering / LangGraph），不是某家独创。先把领域的 state-of-the-art 摸清，避免重复造轮子、也让后面每个决策有依据。</div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section id="s2">
+    <div class="stag"><div class="badge">2</div><h2>拆解已有的 SOC 流程</h2><span class="en">Decompose the proven flow</span></div>
+    <div class="row">
+      <div class="k">做了什么</div><div class="v">把我之前跑通的企业级 SOC / 智能派单 Agent 的状态机拆出来：<b>告警 → 分类 → 派单 → 核验 → 失败重派</b>，外加治理五件套（护栏 / 人工确认 / 自动评估 / 可观测 / 成本控制）。</div>
+      <div class="k">为什么从它起</div><div class="v">这是一个<b>已经在真实企业场景验证过</b>的状态机，带完整治理。不从零设计，直接拿成熟资产当地基。</div>
+    </div>
+    <div class="why"><b>这是整件事的承重墙：</b>我不是来学做 Agent 的——我已经有一个跑通的。后面要做的，只是给它换个处理对象。</div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section id="s3">
+    <div class="stag"><div class="badge">3</div><h2>类比替换到游戏生成场景</h2><span class="en">Analogy-map to game variants</span></div>
+    <p style="color:#dfe3f7;font-size:14.5px;margin-top:12px">把 SOC 流程的每个节点，一对一替换成"生成游戏变体"的节点。同一套架构，换了处理对象：</p>
+    <table>
+      <thead><tr><th>SOC 派单（已验证）</th><th></th><th>游戏变体生成（本作）</th></tr></thead>
+      <tbody>
+        <tr><td class="soc">告警分类</td><td class="arrow">→</td><td class="game">解析 Spec（parse_spec）</td></tr>
+        <tr><td class="soc">自动派单</td><td class="arrow">→</td><td class="game">生成变体代码 / config（generate）</td></tr>
+        <tr><td class="soc">核验工单</td><td class="arrow">→</td><td class="game">跑三层 Harness（run_harness）</td></tr>
+        <tr><td class="soc">失败重派</td><td class="arrow">→</td><td class="game">失败自修复（reflect_and_fix ≤3 次）</td></tr>
+        <tr><td class="soc">护栏 / 人工确认 / 可观测</td><td class="arrow">→</td><td class="game">整套原样迁移</td></tr>
+      </tbody>
+    </table>
+    <div class="why"><b>为什么有效：</b>两个场景是<b>同构</b>的——都是"接收一个意图 → 自动产出 → 验证 → 不过就修"。同构意味着<b>换 payload、不换架构</b>，已有经验直接复用。</div>
+  </section>
+
+  <!-- STEP 4 -->
+  <section id="s4">
+    <div class="stag"><div class="badge">4</div><h2>搭建可执行流程</h2><span class="en">Build the pipeline</span></div>
+    <p style="color:#dfe3f7;font-size:14.5px;margin-top:12px">把上面的设计落成真能跑的代码。一条线：</p>
+    <p style="text-align:center;margin:14px 0;font-size:14px;color:var(--gold);font-weight:700">
+      Spec(YAML) → 参数化 config → 纯JS 引擎 → 三层 Harness → 4 个 A/B 变体 → CI/CD
+    </p>
+    <ul>
+      <li><b>纯 JS 引擎</b>（零依赖、无 DOM）—— 所有玩法参数从 config 读，能在命令行 headless 跑，才能被自动验证。</li>
+      <li><b>一张 config schema</b> —— 棋盘 / 生成 / 计分 / 难度 / 手感全收敛成参数，每个字段就是一个 A/B 维度。</li>
+      <li><b>4 个变体</b> —— control / 紧凑 / 宽松 / 高难，各是同一份 schema 的不同取值。</li>
+      <li><b>三层 Harness</b> —— 属性测试 + headless AI 玩家 + LLM 打分（详见下一步）。</li>
+      <li><b>CI/CD</b> —— 每次提交自动跑门禁，不过不让合并。</li>
+    </ul>
+    <div class="why"><b>为什么这样拆：</b>"参数化"是贯穿全线的脊柱——把游戏的一切可变量收敛成一份 config，流水线才能自动流动、一键喷出 N 个变体。</div>
+  </section>
+
+  <!-- STEP 5 -->
+  <section id="s5">
+    <div class="stag"><div class="badge">5</div><h2>验证看结果</h2><span class="en">Verify &amp; results</span></div>
+    <div class="row">
+      <div class="k">属性测试</div><div class="v"><span class="pill">11 项全过</span> 随机play下恒成立的契约（棋盘尺寸恒定、消行无残留、分数单调不减、每个变体符合 schema…）。</div>
+      <div class="k">headless AI 玩家</div><div class="v">确定性贪心 Agent，对每个变体跑 200 局——这是大厂"AI 模拟玩家上线前预筛"的最简版。</div>
+    </div>
+    <table class="results">
+      <thead><tr><th>变体</th><th>平均分</th><th>平均存活步数</th><th>结果是否符合声明</th></tr></thead>
+      <tbody>
+        <tr><td class="game">control 对照</td><td>297.5</td><td>51.4</td><td>基线</td></tr>
+        <tr><td class="game">compact 紧凑</td><td>377.7</td><td>41.2</td><td>每步分最高、节奏最快 ✅</td></tr>
+        <tr><td class="game">relaxed 宽松</td><td class="hi">799.3</td><td class="hi">166.7</td><td>喘息多、跑最久 ✅</td></tr>
+        <tr><td class="game">hard-mode 高难</td><td>355.9</td><td>33.0</td><td>最短最残暴 ✅</td></tr>
+      </tbody>
+    </table>
+    <div class="why"><b>这张表才是重点：</b>4 个变体的行为是被<b>测出来的</b>、且都符合各自声明意图——证明 config-driven 变体真在改游戏行为，不是换皮。200 局 × 4 变体，<b>0 崩溃</b>，单步耗时全部 &lt; 16ms（一帧）。Harness 让流水线能无人化——验证比生成更快且可信。</div>
+  </section>
+
+  <footer>
+    一份参数化 Spec，喷出 N 个经验证的变体 —— 把单变体交付从天级压到分钟级。<br>
+    <a href="./index.html?variant=compact">在线玩</a> ·
+    <a href="https://github.com/SYMlp/block-blast-pipeline">源码与文档</a>
+  </footer>
+
+</div>
+</body>
+</html>
