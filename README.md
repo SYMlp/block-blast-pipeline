@@ -6,6 +6,9 @@
 >
 > **One line:** an AI-coding pipeline that turns *one parameterized spec* into *many Harness-verified A/B game variants*. The game is the payload; the verifiable generation pipeline is the product.
 
+**🎮 在线可玩（点开即玩，切变体看行为差异）：** https://symlp.github.io/block-blast-pipeline/?variant=compact
+　切 `?variant=control | compact | relaxed | hard-mode` —— 同一份引擎，四种行为。
+
 ## TL;DR（给 30 秒读者 / 机器初筛）
 
 - **问题：** 休闲游戏一年跑上万次 A/B 实验、日均 300+，人手写变体到不了这个量级。
