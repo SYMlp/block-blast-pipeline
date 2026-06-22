@@ -1,0 +1,103 @@
+# ============================================================================
+# Block Blast Pipeline — parameterized Spec (the single source of truth)
+# ----------------------------------------------------------------------------
+# Spec-Driven Development: code (the variant configs) is the DERIVATIVE of this
+# spec, not the other way round. `scripts/build_variants.py` reads the variant
+# matrix below, drives an AI agent to emit each config, and only writes it out
+# if all three Harness layers pass. EARS-style acceptance criteria + few-shot
+# samples + a three-tier guardrail block make this an executable contract, not
+# a doc that rots.
+# ============================================================================
+
+spec_id: block-blast-pipeline-v1
+spec_type: feature
+created: "2026-06-22"
+
+tech_stack:
+  runtime: Browser + HTML5 Canvas (demo) / Node (harness)
+  language: Vanilla JavaScript ES2022 modules
+  test_runner: Vitest + fast-check
+  ci: GitHub Actions
+  schema: JSON Schema draft-07 (config/schema.json)
+
+# ---------------------------------------------------------------------------
+# GUARDRAILS — read by the agent BEFORE generation (Always / Ask / Never).
+# ---------------------------------------------------------------------------
+guardrails:
+  always:
+    - Engine code (engine/**) MUST be pure logic, zero DOM, parameters read from config.
+    - Every generated variant MUST validate against config/schema.json.
+    - Every variant MUST pass all 6 unit invariants and 0 crashes in the headless sim.
+    - Randomness MUST be injected (seedable) so sims are reproducible.
+  ask_first:
+    - Changing the scoring formula (clear_base_factor / combo_curve) — affects A/B baselines.
+    - Adding a new shape to engine/pieces.js — changes the solvability profile.
+    - Introducing any third-party runtime dependency in engine/.
+  never:
+    - Call canvas/DOM APIs from engine/ (logic and feel must stay separable).
+    - Use Math.random() inside placement/clear logic (must be deterministic).
+    - Emit a variant whose board is outside [6,12] x [6,12] (schema bound).
+
+# ---------------------------------------------------------------------------
+# VARIANT MATRIX — what the pipeline produces. Each row is one A/B arm.
+# ---------------------------------------------------------------------------
+variant_matrix:
+  - variant_id: control
+    intent: Standard Block Blast baseline. All A/B arms are measured against this.
+    overrides: {}   # equals the schema defaults
+  - variant_id: compact
+    intent: Small dense board, fast tense pace. Expect higher score/step, shorter games.
+    overrides:
+      board: { width: 7, height: 7 }
+      spawn: { density: 0.7, big_piece_weight_mult: 1.2 }
+      scoring: { clear_base_factor: 6, combo_curve: quadratic }
+  - variant_id: relaxed
+    intent: Large sparse board, slow breathing room. Expect long survival, lower pressure.
+    overrides:
+      board: { width: 10, height: 10 }
+      spawn: { density: 0.3, shape_set: minimal, big_piece_weight_mult: 0.7 }
+      scoring: { combo_curve: linear }
+  - variant_id: hard-mode
+    intent: Big pieces, high scoring, no DDA rescue, violent feel. Expect short brutal games.
+    overrides:
+      spawn: { density: 0.65, shape_set: extended, big_piece_weight_mult: 2.0 }
+      scoring: { clear_base_factor: 8, combo_curve: quadratic }
+      difficulty: { dda_enabled: false, god_mode_after_losses: 99 }
+
+# ---------------------------------------------------------------------------
+# ACCEPTANCE CRITERIA — EARS syntax + few-shot samples.
+# ---------------------------------------------------------------------------
+acceptance_criteria:
+  - id: AC-1-clear
+    ears: WHEN a placement completes a full row or column, THE SYSTEM SHALL empty every cell on that line and award clear_base_factor*r*(r+1)/2 * combo_multiplier points.
+    sample:
+      given: "8x8 board, row fully filled by the placement"
+      expect: "row emptied, combo += 1, score increases"
+  - id: AC-2-solvable
+    ears: WHEN a new tray is drawn, THE SYSTEM SHALL guarantee at least one tray piece has a legal placement (retry up to 30 draws).
+    sample:
+      given: "near-full board"
+      expect: "tray contains at least one placeable piece, or game over flips honestly"
+  - id: AC-3-gameover
+    ears: WHEN no tray piece can be legally placed anywhere, THE SYSTEM SHALL set gameOver = true.
+    sample:
+      given: "board with no room for any tray piece"
+      expect: "gameOver true, no further moves accepted"
+  - id: AC-4-determinism
+    ears: GIVEN the same seed, THE SYSTEM SHALL produce an identical game trajectory.
+    sample:
+      given: "two engines, same config, same seed"
+      expect: "identical score and board after the same move sequence"
+  - id: AC-5-differentiation
+    ears: WHEN the headless sim runs N games per variant, THE SYSTEM SHALL show each non-control variant's avg survival OR avg score measurably outside the control noise band.
+    sample:
+      given: "relaxed vs control, 200 games"
+      expect: "relaxed avg survival steps clearly higher than control"
+
+# ---------------------------------------------------------------------------
+# HARNESS GATES — the variant is only written if all pass.
+# ---------------------------------------------------------------------------
+harness:
+  layer_1_unit: "npx vitest run harness/unit  — 6 invariants, must all pass"
+  layer_2_sim: "node harness/sim/headless-sim.js --games 200  — 0 crashes, max step < 16ms"
+  layer_3_eval: "node harness/eval/judge.js <id>  — LLM-as-Judge, min dimension >= 7 (bonus)"

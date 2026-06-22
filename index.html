@@ -1,0 +1,131 @@
+<title>Block Blast Pipeline · 变体流水线 Demo</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:linear-gradient(160deg,#1b2440 0%,#2a2150 55%,#3a2160 100%);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:16px; color:#eef0ff; user-select:none;
+  }
+  #wrap { width:100%; max-width:400px; }
+  #vbar { display:flex; gap:6px; margin-bottom:8px; }
+  .vbtn {
+    flex:1; border:none; cursor:pointer; font:inherit; font-size:12px; font-weight:700;
+    padding:8px 4px; border-radius:10px; color:#cfd3f5; background:rgba(255,255,255,.07); transition:all .12s;
+  }
+  .vbtn.on { background:#ffd23f; color:#1b2440; box-shadow:0 4px 12px rgba(255,210,63,.3); }
+  #diff { font-size:11px; opacity:.6; min-height:15px; margin-bottom:8px; text-align:center; }
+  #hud { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; padding:0 4px; }
+  #title { font-size:16px; font-weight:700; }
+  #title small { font-weight:500; opacity:.5; font-size:11px; margin-left:4px; }
+  #score-box { text-align:right; }
+  #score { font-size:28px; font-weight:800; line-height:1; color:#ffd23f; transition:transform .08s; }
+  #score-label { font-size:10px; opacity:.5; letter-spacing:1px; }
+  #combo { font-size:12px; color:#7ee787; height:14px; font-weight:700; }
+  #stage { position:relative; width:100%; aspect-ratio:360/520; background:rgba(255,255,255,.04); border-radius:18px; overflow:hidden; box-shadow:0 16px 40px rgba(0,0,0,.4), inset 0 0 0 1px rgba(255,255,255,.07); }
+  canvas { display:block; width:100%; height:100%; touch-action:none; }
+  #over { position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; gap:12px; background:rgba(15,18,40,.7); backdrop-filter:blur(6px); border-radius:18px; }
+  #over.show { display:flex; }
+  #over h2 { font-size:24px; font-weight:800; }
+  #over .final { font-size:40px; font-weight:900; color:#ffd23f; line-height:1; }
+  #restart { border:none; cursor:pointer; font:inherit; font-weight:700; font-size:15px; color:#1b2440; background:#ffd23f; padding:11px 28px; border-radius:999px; }
+  #hint { text-align:center; font-size:11px; opacity:.4; margin-top:9px; }
+</style>
+
+<div id="wrap">
+  <div id="vbar"></div>
+  <div id="diff"></div>
+  <div id="hud">
+    <div><div id="title">方块消除 <small id="vname">对照组</small></div><div id="combo"></div></div>
+    <div id="score-box"><div id="score">0</div><div id="score-label">SCORE</div></div>
+  </div>
+  <div id="stage">
+    <canvas id="c"></canvas>
+    <div id="over"><h2>没地方放啦</h2><div class="final" id="final">0</div><button id="restart">再来一局</button></div>
+  </div>
+  <div id="hint">同一份引擎 · 切上面的变体看行为差异 · 这就是「一份 config 喷 N 个 A/B 变体」的脊柱</div>
+</div>
+
+<script type="module">
+import { GameEngine } from './engine/GameEngine.js';
+import { CanvasRenderer, STAGE_W, STAGE_H } from './renderer/CanvasRenderer.js';
+import { loadVariant } from './config/ConfigLoader.js';
+import { VariantSelector } from './ui/VariantSelector.js';
+
+const canvas = document.getElementById('c');
+const overEl = document.getElementById('over');
+const finalEl = document.getElementById('final');
+const comboEl = document.getElementById('combo');
+const scoreEl = document.getElementById('score');
+
+let engine, renderer;
+let held = null;     // { index, piece, pointer:{x,y} }
+const pointer = { x: STAGE_W / 2, y: STAGE_H / 2 };
+
+const selector = new VariantSelector(
+  document.getElementById('vbar'),
+  document.getElementById('diff'),
+  (id) => switchVariant(id)
+);
+
+// Load control once so the diff table has a baseline.
+loadVariant('control').then((c) => selector.setControl(c));
+
+async function switchVariant(id) {
+  const config = await loadVariant(id);
+  engine = new GameEngine(config, { seed: (Date.now() & 0x7fffffff) || 1 });
+  renderer = new CanvasRenderer(canvas, engine);
+  document.getElementById('vname').textContent = config.variant_name || id;
+  comboEl.textContent = '';
+  overEl.classList.remove('show');
+  selector.update(id, config);
+  history.replaceState(null, '', '?variant=' + id);
+}
+
+function eventToStage(e) {
+  const rect = canvas.getBoundingClientRect();
+  const t = e.touches ? e.touches[0] : e;
+  pointer.x = (t.clientX - rect.left) / rect.width * STAGE_W;
+  pointer.y = (t.clientY - rect.top) / rect.height * STAGE_H;
+}
+
+function trayHit() {
+  const slotW = STAGE_W / engine.tray.length;
+  for (let i = 0; i < engine.tray.length; i++) {
+    const p = engine.tray[i]; if (!p) continue;
+    const cx = slotW * i + slotW / 2;
+    if (Math.abs(pointer.x - cx) < slotW / 2 && pointer.y > renderer.trayY - 12 && pointer.y < STAGE_H) return i;
+  }
+  return -1;
+}
+
+canvas.addEventListener('pointerdown', (e) => { if (engine.gameOver) return; eventToStage(e); const i = trayHit(); if (i >= 0) held = { index: i, piece: engine.tray[i], pointer }; });
+canvas.addEventListener('pointermove', (e) => { if (held) { eventToStage(e); e.preventDefault(); } });
+canvas.addEventListener('pointerup', (e) => {
+  if (!held) return;
+  eventToStage(e);
+  const p = held.piece;
+  const row = Math.round((pointer.y - p.rows * renderer.cell - 20 - renderer.gy) / renderer.cell);
+  const col = Math.round((pointer.x - p.cols * renderer.cell / 2 - renderer.gx) / renderer.cell);
+  const result = engine.applyMove(held.index, row, col);
+  if (result) renderer.onMove(result);
+  held = null;
+  if (engine.gameOver) { finalEl.textContent = engine.score; overEl.classList.add('show'); }
+});
+document.getElementById('restart').addEventListener('click', () => { engine.reset(); renderer.bind(engine); overEl.classList.remove('show'); });
+
+function loop() {
+  if (engine && renderer) {
+    if (!engine.gameOver) renderer.update();
+    renderer.render(held ? { index: held.index, piece: held.piece, pointer } : null);
+    scoreEl.textContent = Math.round(renderer.dispScore);
+    if (engine.combo > 1) comboEl.textContent = `连击 x${engine.combo}`;
+    else if (!engine.gameOver) comboEl.textContent = '';
+  }
+  requestAnimationFrame(loop);
+}
+
+const start = new URLSearchParams(location.search).get('variant');
+switchVariant(['control', 'compact', 'relaxed', 'hard-mode'].includes(start) ? start : 'control');
+loop();
+</script>

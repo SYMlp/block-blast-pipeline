@@ -1,0 +1,9 @@
+{
+  "variant_id": "hard-mode",
+  "variant_name": "高难版",
+  "board": { "width": 8, "height": 8, "cell_size_px": 60 },
+  "spawn": { "density": 0.65, "shape_set": "extended", "preview_count": 3, "big_piece_weight_mult": 2.0 },
+  "scoring": { "placement_per_cell": 1, "clear_base_factor": 8, "combo_curve": "quadratic" },
+  "difficulty": { "dda_enabled": false, "dda_high_occupancy": 0.75, "dda_low_occupancy": 0.35, "god_mode_after_losses": 99 },
+  "juice": { "line_clear_trauma": 0.6, "hit_stop_ms": 100, "particles_per_cell": 18, "flash_alpha": 0.6, "line_clear_delay_ms": 50 }
+}

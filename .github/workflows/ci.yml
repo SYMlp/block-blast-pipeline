@@ -1,0 +1,23 @@
+name: harness
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  harness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      # Layer 1 — property-based unit invariants
+      - name: Unit invariants (Vitest + fast-check)
+        run: npx vitest run harness/unit
+      # Layer 2 — headless AI-player sim, gate on 0 crashes across all variants
+      - name: Headless sim (greedy agent, 200 games/variant)
+        run: node harness/sim/headless-sim.js --games 200
