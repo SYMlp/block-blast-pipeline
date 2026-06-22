@@ -133,7 +133,7 @@ GATE PASSED: 0 crashes across 4 variant(s).
 
 `scripts/build_variants.py` 是节点图收敛成的可读脚本：`parse_spec → generate_code → run_harness →（失败）reflect_and_fix（≤3 次）→ git_commit`。默认 dry-run（只跑门禁、不调 AI、零凭据）；`--live` 才调 `claude` 生成。
 
-**这条 Spec-生成-验证-自修复状态机，与我的企业级 Agent 项目 incident-dispatch-agent（指标告警自动派单，LangGraph）同构**——告警分类=parse_spec、派单=generate_code、核验=run_harness、重派=reflect_and_fix，护栏/HITL/断路器/可观测性五件套整套可迁。对我来说这不是新东西，是换了个 payload。映射详见 [`docs/pipeline.md`](docs/pipeline.md)。
+**这条 Spec-生成-验证-自修复状态机，与我的企业级 Agent 项目 incident-dispatch-agent（指标告警自动派单，LangGraph）同构**——告警分类=parse_spec、派单=generate_code、核验=run_harness、重派=reflect_and_fix，护栏/HITL/断路器/可观测性五件套整套可迁。所以这套架构不是为 demo 从零搭的，是换了个处理对象。映射详见 [`docs/pipeline.md`](docs/pipeline.md)。
 
 ## 6. 怎么跑起来
 
