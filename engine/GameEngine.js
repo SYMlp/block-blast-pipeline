@@ -45,6 +45,9 @@ export class GameEngine {
     this.linesCleared = 0;
     this.tray = [];
     this.refillTray();
+    // Make the opening-state invariant explicit rather than only implied by
+    // prefill guards: if (pathologically) no tray piece fits, flag it now.
+    this.checkGameOver();
   }
 
   // Solvability guarantee: keep redrawing until at least one tray piece fits.

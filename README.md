@@ -108,6 +108,8 @@ hard-mode   200    0        63.9       4.8        2.2        0.15
 GATE PASSED: 0 crashes, worst step 1.02ms < 16ms across 4 variant(s).
 ```
 
+> 注：`avgScore / avgSteps / avgLines` 三列是**确定性的**（seed 固定，任何机器复现逐位一致）；`maxStep(ms)` 是 wall-clock 计时，随机器/负载浮动，这里只是本机参考值——门禁判定的是"是否 < 16ms 一帧预算"，不依赖具体毫秒数。
+
 读这张表（这才是 Harness 的价值——变体差异是被**测出来的**，不是嘴上说的）：
 
 - **relaxed**（10×10 大棋盘、密度仅 0.3、minimal 小片库）存活 ~75 步、均分 ~359——明显比其它变体喘息更多、跑得更久。
