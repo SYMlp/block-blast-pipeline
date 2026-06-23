@@ -148,13 +148,13 @@
       <div class="node">
         <h3>6 · 凭直觉选的指标,被真实数据淘汰</h3>
         <p class="did">推导完,我凭直觉押"棋盘占用率"当公平感的代理指标。</p>
-        <div class="pain"><b>痛点:</b>真跑 sim 一看——占用率在四个变体间是平的(0.61–0.66),被千篇一律的贪心 agent 抹平了,<b>根本区分不开</b>。</div>
+        <div class="pain"><b>痛点:</b>真跑 sim 一看——占用率在各变体间是平的(0.60–0.66),被千篇一律的贪心 agent 抹平了,<b>根本区分不开</b>。</div>
         <div class="fix"><b>怎么改:</b>淘汰它,换成实测强区分的三个:<b>rescueRate</b>(安全网救场率=公平)、<b>rewardEntropy</b>(清除规模的熵=惊喜)、<b>stepsP90</b>(单局长度=节奏)。指标不是猜的,是被数据筛出来的。</div>
       </div>
 
       <div class="node win">
         <h3>7 · 闭环成真:门禁有牙齿 + AI 真的会改</h3>
-        <p class="did">三层 DSL + 验证门禁 + 真 AI 生成,全部跑通(下方是真实输出)。两件事证明它不是花架子:一个变体被<b>自动淘汰</b>,一个变体由 AI <b>反复改三次才达标</b>。</p>
+        <p class="did">三层 DSL + 验证门禁 + 真 AI 生成,全部跑通(下方是真实输出)。两件事证明它不是花架子:故意造的 relaxed 被<b>自动淘汰</b>,而 AI 给自己许下兑现不了的目标带时,候选会被<b>自动删档、绝不放行</b>(见下)。</p>
       </div>
     </div>
   </section>
@@ -169,26 +169,34 @@
         <tr><td class="game">control 基线</td><td class="pass">PROMOTE</td><td>四项代理全落带内</td></tr>
         <tr><td class="game">compact 紧凑</td><td class="pass">PROMOTE</td><td>节奏最快、惊喜最足(rewEnt 0.56)</td></tr>
         <tr><td class="game">hard-mode 高难</td><td class="pass">PROMOTE</td><td>刻意贴挫败崖,但验明没跌破底线</td></tr>
-        <tr><td class="game">ai-brisk 明快(AI 生成)</td><td class="pass">PROMOTE</td><td>AI 三次收敛产出,见下</td></tr>
+        <tr><td class="game">ai-brisk 明快(AI 生成)</td><td class="pass">PROMOTE</td><td>AI 真实生成产物(见下),四项落带内</td></tr>
         <tr><td class="game">relaxed 宽松</td><td class="fail">REJECT</td><td>rewEnt 0.12&lt;0.2(太闷)、stepsP90 170&gt;60(拖沓)→ 贴无聊崖</td></tr>
       </tbody>
     </table>
     <div class="why"><b>relaxed 被自动枪毙,才是门禁有牙齿的证据。</b>一个"看起来人畜无害的轻松版",harness 判它跌进无聊崖、打回——不靠人肉试玩。全 PASS 的门禁等于没门禁。</div>
   </section>
 
-  <!-- AI CONVERGENCE -->
+  <!-- AI GENERATION -->
   <section id="agent">
-    <div class="stag"><div class="badge">③</div><h2>AI 生成:一句假设 → 三次收敛</h2></div>
-    <p class="sintro">输入一句人话:"给熟练玩家的明快变体:节奏快、消除频繁、惊喜足,但保持公平,单局仍碎片化"。AI 自己定目标带、调参数,harness 把失败结构化喂回去重试。</p>
+    <div class="stag"><div class="badge">③</div><h2>AI 生成:harness 是 AI 的裁判,不是橡皮图章</h2></div>
+    <p class="sintro">输入一句人话:"给熟练玩家的明快变体:节奏快、消除频繁、惊喜足,但保持公平,单局仍碎片化"。AI 自己定目标带、调参数,harness 把失败结构化喂回去重试,耗尽次数则删档不放行。claude 输出非确定,所以这是真闭环、不是录像。两次真实运行说明问题:</p>
     <table class="mono">
-      <thead><tr><th>尝试</th><th>发生了什么</th><th>裁决</th></tr></thead>
+      <thead><tr><th>运行</th><th>发生了什么</th><th>结局</th></tr></thead>
       <tbody>
-        <tr><td>1</td><td>rescueRate 0.107 略超 0.1(稍不公平)</td><td class="fail">REJECT</td></tr>
-        <tr><td>2</td><td><b>过冲</b>:修好公平(0.000),却把节奏 0.430、惊喜 0.344 双双拉出带</td><td class="fail">REJECT</td></tr>
-        <tr><td>3</td><td>打开 DDA + 收紧占用阈值对冲大片不公平 → 四项全 PASS</td><td class="pass">PROMOTE</td></tr>
+        <tr><td>A(max 3)</td><td>AI 把 clearRate 地板定到 <b>0.45</b>,但贪心 agent 在这套参数域里消除率顶到 ~0.44 就够不着,三次都差一线</td><td class="fail">候选删档,未放行</td></tr>
+        <tr><td>B(max 6)</td><td>AI 给自己定了<b>能兑现</b>的带(clearRate≥0.4 等),选 7×7+extended+DDA,attempt 1 就把四项打进带内</td><td class="pass">PROMOTE</td></tr>
       </tbody>
     </table>
-    <div class="why"><b>attempt 2 的过冲,正是"感受↔参数"翻译有损的活证据:</b>修公平性牺牲了节奏。AI 拿着 harness 的结构化反馈把两者重新配平,第三次用 DDA 这个旋钮解开了矛盾。这就是"多步推理 + 反思自修复",真跑出来的,不是一把过的运气。</div>
+    <table class="mono">
+      <thead><tr><th>proxy(运行 B 实测)</th><th>measured</th><th>band</th><th>裁决</th></tr></thead>
+      <tbody>
+        <tr><td>rescueRate</td><td>0.112</td><td>[0, 0.12]</td><td class="pass">PASS</td></tr>
+        <tr><td>clearRate</td><td>0.492</td><td>[0.4, +∞]</td><td class="pass">PASS</td></tr>
+        <tr><td>rewardEntropy</td><td>0.442</td><td>[0.25, 0.6]</td><td class="pass">PASS</td></tr>
+        <tr><td>stepsP90</td><td>17</td><td>[−∞, 60]</td><td class="pass">PASS</td></tr>
+      </tbody>
+    </table>
+    <div class="why"><b>两次对照才是重点:门禁约束的不只是参数,还有 AI 给自己许下的承诺(band)。</b>运行 A 里 AI 许了个兑现不了的承诺,被门禁打回并丢弃;运行 B 里它许了能兑现的承诺并一次达标。失败的永远留不在仓里——这才是"自修复"有牙齿的样子,不是一把过的运气。</div>
   </section>
 
   <!-- 承重墙 -->

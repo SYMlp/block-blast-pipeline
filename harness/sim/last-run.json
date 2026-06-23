@@ -4,7 +4,7 @@
   "frameBudgetMs": 16,
   "gate": {
     "crashes": 0,
-    "worstStepMs": 0.8674000000000035,
+    "worstStepMs": 0.3926999999999907,
     "passed": true
   },
   "variants": [
@@ -12,17 +12,17 @@
       "id": "ai-brisk",
       "games": 200,
       "crashes": 0,
-      "avgScore": 100.55,
-      "avgSteps": 6.66,
-      "avgLines": 3.69,
-      "clearRate": 0.49774774774774777,
-      "rescueRate": 0.10946196660482375,
-      "rewardEntropy": 0.5228069330465563,
-      "avgEndOccupancy": 0.5896938775510199,
-      "avgMaxCombo": 1.59,
+      "avgScore": 93.565,
+      "avgSteps": 6.225,
+      "avgLines": 3.335,
+      "clearRate": 0.491566265060241,
+      "rescueRate": 0.11198428290766209,
+      "rewardEntropy": 0.44229065953491287,
+      "avgEndOccupancy": 0.60438775510204,
+      "avgMaxCombo": 1.43,
       "stepsMedian": 2,
       "stepsP90": 17,
-      "worstStepMs": 0.6970999999999989
+      "worstStepMs": 0.38939999999999486
     },
     {
       "id": "compact",
@@ -38,7 +38,7 @@
       "avgMaxCombo": 1.88,
       "stepsMedian": 5,
       "stepsP90": 31,
-      "worstStepMs": 0.8674000000000035
+      "worstStepMs": 0.22530000000000427
     },
     {
       "id": "control",
@@ -54,7 +54,7 @@
       "avgMaxCombo": 1.14,
       "stepsMedian": 5,
       "stepsP90": 29,
-      "worstStepMs": 0.5963999999999885
+      "worstStepMs": 0.3926999999999907
     },
     {
       "id": "hard-mode",
@@ -70,7 +70,7 @@
       "avgMaxCombo": 1.06,
       "stepsMedian": 2,
       "stepsP90": 11,
-      "worstStepMs": 0.2295999999999907
+      "worstStepMs": 0.3237000000000023
     },
     {
       "id": "relaxed",
@@ -86,7 +86,7 @@
       "avgMaxCombo": 2.26,
       "stepsMedian": 50,
       "stepsP90": 170,
-      "worstStepMs": 0.373800000000017
+      "worstStepMs": 0.37460000000001514
     }
   ]
 }

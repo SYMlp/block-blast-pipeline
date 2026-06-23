@@ -8,62 +8,61 @@
         "proxy": "rescueRate",
         "band": [
           0,
-          0.1
+          0.12
         ],
-        "represents": "公平感 —— 大片偏重下 RNG 仍可控,安全网介入率低"
+        "represents": "公平感 —— DDA 在小棋盘上仍把 RNG 死局率压在可接受范围"
       },
       {
         "proxy": "clearRate",
         "band": [
-          0.45,
-          0.75
+          0.4,
+          null
         ],
-        "represents": "节奏明快 —— 消除密度明显高于基线,熟练玩家不觉闷"
+        "represents": "节奏 —— 消除频率明显高于基线(~0.25),体感'明快'"
       },
       {
         "proxy": "rewardEntropy",
         "band": [
-          0.35,
-          null
+          0.25,
+          0.6
         ],
-        "represents": "惊喜充足 —— extended 形状集带来多样消除规模,不单调"
+        "represents": "惊喜 —— 大小片混出、消除规模有变化,不单调"
       },
       {
         "proxy": "stepsP90",
         "band": [
-          10,
+          null,
           60
         ],
-        "represents": "单局碎片化 —— P90 不拖到 60 步以上,适合短暂介入"
+        "represents": "碎片化单局 —— 九成游戏在 60 步内结束,适合插空玩"
       }
-    ]
+    ],
+    "expect": "PROMOTE"
   },
   "board": {
     "width": 7,
-    "height": 7,
-    "cell_size_px": 60
+    "height": 7
   },
   "spawn": {
     "density": 0.65,
     "shape_set": "extended",
     "preview_count": 3,
-    "big_piece_weight_mult": 2.0
+    "big_piece_weight_mult": 1.4
   },
   "scoring": {
     "placement_per_cell": 1,
-    "clear_base_factor": 6,
+    "clear_base_factor": 7,
     "combo_curve": "quadratic"
   },
   "difficulty": {
     "dda_enabled": true,
-    "dda_high_occupancy": 0.65,
-    "dda_low_occupancy": 0.3
+    "dda_high_occupancy": 0.7,
+    "dda_low_occupancy": 0.4
   },
   "juice": {
-    "line_clear_trauma": 0.4,
+    "line_clear_trauma": 0.45,
     "hit_stop_ms": 40,
-    "particles_per_cell": 12,
-    "flash_alpha": 0.4,
-    "line_clear_delay_ms": 60
+    "particles_per_cell": 14,
+    "flash_alpha": 0.4
   }
 }

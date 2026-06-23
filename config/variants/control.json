@@ -8,11 +8,12 @@
       { "proxy": "clearRate",     "band": [0.25, 0.55], "represents": "秩序节拍 —— 消除不太稀(闷)也不太密(无脑)" },
       { "proxy": "rewardEntropy", "band": [0.2, null],  "represents": "惊喜供给 —— 清除规模有变化,不是一成不变" },
       { "proxy": "stepsP90",      "band": [15, 60],     "represents": "节奏/可中断 —— 绝大多数局落在碎片化时长内" }
-    ]
+    ],
+    "expect": "PROMOTE"
   },
-  "board": { "width": 8, "height": 8, "cell_size_px": 60 },
+  "board": { "width": 8, "height": 8 },
   "spawn": { "density": 0.5, "shape_set": "standard", "preview_count": 3, "big_piece_weight_mult": 1.0 },
   "scoring": { "placement_per_cell": 1, "clear_base_factor": 5, "combo_curve": "stepped" },
   "difficulty": { "dda_enabled": true, "dda_high_occupancy": 0.75, "dda_low_occupancy": 0.35 },
-  "juice": { "line_clear_trauma": 0.3, "hit_stop_ms": 50, "particles_per_cell": 10, "flash_alpha": 0.3, "line_clear_delay_ms": 80 }
+  "juice": { "line_clear_trauma": 0.3, "hit_stop_ms": 50, "particles_per_cell": 10, "flash_alpha": 0.3 }
 }

@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "sim": "node harness/sim/headless-sim.js",
     "sim:all": "node harness/sim/headless-sim.js --games 200",
-    "verify": "node harness/verify/check-targets.js"
+    "verify": "node harness/verify/check-targets.js",
+    "verify:ci": "node harness/verify/check-targets.js --check-expectations"
   },
   "devDependencies": {
     "fast-check": "^3.23.2",

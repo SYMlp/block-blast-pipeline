@@ -8,11 +8,12 @@
       { "proxy": "clearRate",     "band": [0.4, 0.65],  "represents": "秩序节拍 —— 比基线更密的消除心跳" },
       { "proxy": "rewardEntropy", "band": [0.4, null],  "represents": "惊喜供给 —— 清除规模更多变,多巴胺更足" },
       { "proxy": "stepsP90",      "band": [15, 60],     "represents": "节奏/可中断 —— 仍落在碎片化时长内" }
-    ]
+    ],
+    "expect": "PROMOTE"
   },
-  "board": { "width": 7, "height": 7, "cell_size_px": 60 },
+  "board": { "width": 7, "height": 7 },
   "spawn": { "density": 0.7, "shape_set": "standard", "preview_count": 3, "big_piece_weight_mult": 1.2 },
   "scoring": { "placement_per_cell": 1, "clear_base_factor": 6, "combo_curve": "quadratic" },
   "difficulty": { "dda_enabled": true, "dda_high_occupancy": 0.75, "dda_low_occupancy": 0.35 },
-  "juice": { "line_clear_trauma": 0.4, "hit_stop_ms": 60, "particles_per_cell": 12, "flash_alpha": 0.4, "line_clear_delay_ms": 60 }
+  "juice": { "line_clear_trauma": 0.4, "hit_stop_ms": 60, "particles_per_cell": 12, "flash_alpha": 0.4 }
 }

@@ -12,6 +12,7 @@
       "required": ["hypothesis", "targets"],
       "properties": {
         "hypothesis": { "type": "string", "description": "人话:这个变体想验证什么感受假设" },
+        "expect": { "type": "string", "enum": ["PROMOTE", "REJECT"], "description": "这个变体被设计成的预期裁决:PROMOTE=应当全部命中带、REJECT=故意越带的反例(如 relaxed)。CI 用它做裁决回归守护:实测裁决≠expect 即门禁回归,挂 CI。" },
         "targets": {
           "type": "array",
           "description": "每条 = 一个可测代理 + 期望落在的双边带 [地板, 天花板](null=该侧不设限)",
@@ -32,8 +33,7 @@
       "required": ["width", "height"],
       "properties": {
         "width":  { "type": "integer", "minimum": 6, "maximum": 12, "default": 8 },
-        "height": { "type": "integer", "minimum": 6, "maximum": 12, "default": 8 },
-        "cell_size_px": { "type": "integer", "default": 60 }
+        "height": { "type": "integer", "minimum": 6, "maximum": 12, "default": 8 }
       }
     },
     "spawn": {
@@ -69,8 +69,7 @@
         "line_clear_trauma":  { "type": "number", "default": 0.3 },
         "hit_stop_ms":        { "type": "integer", "default": 50 },
         "particles_per_cell": { "type": "integer", "default": 10 },
-        "flash_alpha":        { "type": "number", "default": 0.3 },
-        "line_clear_delay_ms": { "type": "integer", "default": 80 }
+        "flash_alpha":        { "type": "number", "default": 0.3 }
       }
     }
   }

@@ -23,7 +23,7 @@
 4. 迁移我在另一个项目(等保 SOC 系统)里跑在 50+ 实体上的声明式 DSL 方法论,用它自带的"防注水闸"守住 →
 5. 表面找不到"该测什么" → **认知推导到底层**(玩的本质→休闲特化→可测代理),挖出"两道悬崖" →
 6. 凭直觉押的指标(占用率)**被真实数据淘汰**,换成实测强区分的三个 →
-7. 闭环成真:门禁有牙齿(一个变体被自动淘汰)+ AI 真会改(一个变体反复三次才达标)。
+7. 闭环成真:门禁有牙齿(`relaxed` 被自动淘汰、一次失败的 AI 生成被自动删档)+ AI 真受约束(它给自己许的 band 兑现不了就被打回,见 §4 两次真实运行)。
 
 完整图文见 **[process.html](https://symlp.github.io/block-blast-pipeline/process.html)**。
 
@@ -40,7 +40,7 @@
                                  L3 LLM-judge（骨架/未接入）
 ```
 
-实线 = 真跑通且进门禁。`reflect_and_fix` 自修复回环**现在是真的**(下面 §4 有一次真实的三轮收敛);唯一仍是骨架的是 L3 LLM-judge。节点图见 [`docs/pipeline.md`](docs/pipeline.md)。
+实线 = 真跑通且进门禁。`reflect_and_fix` 自修复回环**现在是真的**(下面 §4 有两次真实运行:一次失败被自动丢弃、一次达标);唯一仍是骨架的是 L3 LLM-judge。节点图见 [`docs/pipeline.md`](docs/pipeline.md)。
 
 ## 2. 三层 DSL：把"人类感受↔参数"的转换显式化
 
@@ -80,24 +80,31 @@
 | control 基线 | 0.333 | 0.018 | 0.29 | 29 | **PROMOTE** |
 | compact 紧凑 | 0.476 | 0.057 | 0.56 | 31 | **PROMOTE** |
 | hard-mode 高难 | 0.426 | 0.098 | 0.34 | 11 | **PROMOTE** |
-| ai-brisk（AI 生成）| 0.495 | 0.098 | 0.55 | 17 | **PROMOTE** |
+| ai-brisk（AI 生成）| 0.492 | 0.112 | 0.44 | 17 | **PROMOTE** |
 | **relaxed 宽松** | 0.254 | 0.001 | **0.12** | **170** | **REJECT** |
 
 > `relaxed` 被自动淘汰才是门禁有牙齿的证据:一个"看似人畜无害的轻松版",harness 判它 `rewardEntropy 0.12 < 0.2`(太闷)+ `stepsP90 170 > 60`(拖沓)= 贴在无聊崖上,打回——不靠人肉试玩。全 PASS 的门禁等于没门禁。
 >
-> 代理是确定性的(seed 固定,任何机器逐位复现);完整 JSON 见 `harness/sim/last-run.json`。注:`avgEndOccupancy`(占用率)曾被押作"公平感"代理,但实测在各变体间是平的(0.61–0.66,被贪心 agent 抹平),**已淘汰**——指标不是猜的,是被数据筛出来的。
+> 代理是确定性的(seed 固定,任何机器逐位复现);完整 JSON 见 `harness/sim/last-run.json`。注:`avgEndOccupancy`(占用率)曾被押作"公平感"代理,但实测在各变体间是平的(0.60–0.66,被贪心 agent 抹平),**已淘汰**——指标不是猜的,是被数据筛出来的。
+>
+> CI 不止报告还**兜底**:每个变体声明 `intent.expect`(PROMOTE / REJECT),`npm run verify:ci` 在实测裁决偏离 expect 时 `exit 1`(裁决回归守护)。`relaxed` 声明 `expect: REJECT`,所以这个故意反例不会染红 CI——只有"本该 PROMOTE 的变体悄悄跑挂了自己的门禁"这种真回归才挂 CI。
 
-## 4. AI 生成闭环：一句假设 → 三次收敛
+## 4. AI 生成闭环：harness 是 AI 的裁判,不是 AI 的橡皮图章
 
-`python scripts/build_variants.py --new "<假设>" --id <id>` 跑真 agent loop(claude CLI 生成 → schema → sim → verify → 结构化反馈重试 ≤3)。一次真实运行,输入"给熟练玩家的明快变体:节奏快、消除频繁、惊喜足,但保持公平、单局仍碎片化":
+`python scripts/build_variants.py --new "<假设>" --id <id> [--max-attempts N]` 跑真 agent loop(claude CLI 生成 params + 自己声明的 `intent.targets` → schema → sim → verify → 把**结构化失败反馈**喂回重试 → 耗尽次数则**删档不放行**)。claude 输出是非确定的,所以这是一条真闭环、不是录像。两次真实运行,同一句假设"给熟练玩家的明快变体:节奏快、消除频繁、惊喜足,但保持公平、单局仍碎片化":
 
-| 尝试 | 发生了什么 | 裁决 |
-|:-:|---|:--|
-| 1 | rescueRate 0.107 略超 0.1(稍不公平) | REJECT |
-| 2 | **过冲**:修好公平(0.000),却把节奏 0.430、惊喜 0.344 拉出带 | REJECT |
-| 3 | 打开 DDA + 收紧占用阈值对冲大片不公平 → 四项全 PASS | **PROMOTE** |
+**运行 A(`--max-attempts 3`)——失败被自动丢弃:** AI 把 `clearRate` 地板定到 `0.45`,但贪心 agent 在这套参数域里消除率顶到 ~0.44 就上不去了,三次都差一线 → 候选 `unlink` 删除,**没蒙混进仓**。这正是"做不成就删"铁律在 loop 里长出的牙齿。
 
-attempt 2 的过冲正是"感受↔参数"翻译有损的活证据;AI 拿 harness 的结构化反馈把公平与节奏重新配平。这就是"多步推理 + 反思自修复",真跑出来的。产物 [`config/variants/ai-brisk.json`](config/variants/ai-brisk.json) 现在可在线玩。
+**运行 B(`--max-attempts 6`)——attempt 1 即 PROMOTE:** 这次 AI 给自己定了**能兑现**的带(`clearRate ≥ 0.4`、`rewardEntropy [0.25,0.6]`、`rescueRate ≤ 0.12`、`stepsP90 ≤ 60`),并选 7×7 + extended + DDA 的参数把四项一次打进带内:
+
+| proxy | measured | band | verdict |
+|---|--:|:--|:--|
+| rescueRate | 0.112 | [0, 0.12] | PASS |
+| clearRate | 0.492 | [0.4, +∞] | PASS |
+| rewardEntropy | 0.442 | [0.25, 0.6] | PASS |
+| stepsP90 | 17 | [−∞, 60] | PASS |
+
+两次对照才是重点:**门禁约束的不只是参数,还有 AI 给自己许下的承诺(band)。** A 里 AI 许了个兑现不了的承诺被门禁打回并丢弃;B 里 AI 学乖、许了能兑现的承诺并一次达标。产物 [`config/variants/ai-brisk.json`](config/variants/ai-brisk.json)(运行 B 的真实产物)现在可在线玩。复跑脚本会重新生成,结果随模型采样变化——失败的永远不会留在仓里。
 
 ## 5. 指标从哪来：认知推导,不是拍脑袋
 
@@ -119,7 +126,8 @@ npm install
 npm test                 # L1 属性测试 + 奇偶校验（13 用例）
 npm run typecheck        # tsc --noEmit（TS 逻辑核）
 npm run sim              # L2 headless 模拟 + 行为指纹 → last-run.json
-npm run verify           # 验证层门禁报告（PROMOTE / REJECT）
+npm run verify           # 验证层门禁报告（PROMOTE / REJECT，只报告）
+npm run verify:ci        # 裁决回归守护：实测裁决≠intent.expect 则 exit 1（CI 跑这条）
 python scripts/build_variants.py --new "<假设>" --id myvar   # 真 AI 生成闭环（需 claude CLI）
 npx serve .              # 可玩 demo：http://localhost:3000/index.html?variant=ai-brisk
 ```

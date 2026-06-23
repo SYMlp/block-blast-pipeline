@@ -21,3 +21,10 @@ jobs:
       # Layer 2 — headless AI-player sim, gate on 0 crashes across all variants
       - name: Headless sim (greedy agent, 200 games/variant)
         run: node harness/sim/headless-sim.js --games 200
+      # Verification layer — verdict-regression guard. Each variant declares an
+      # intent.expect (PROMOTE / REJECT); CI fails only when a measured verdict
+      # drifts from it. relaxed is expect:REJECT, so the deliberate counter-
+      # example stays green — only a real regression (a shipped variant that
+      # silently stopped passing its own gate) reddens CI.
+      - name: Verify (verdict-regression gate)
+        run: node harness/verify/check-targets.js --check-expectations

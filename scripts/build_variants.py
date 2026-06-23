@@ -202,12 +202,13 @@ def main():
     ap.add_argument("--new", metavar="HYPOTHESIS", help="generate ONE new variant from a human hypothesis (live agent loop)")
     ap.add_argument("--id", help="variant_id for --new (e.g. ai-brisk)")
     ap.add_argument("--games", type=int, default=200, help="games/variant for the sim gate")
+    ap.add_argument("--max-attempts", type=int, default=3, help="max reflect_and_fix iterations before discarding the candidate")
     args = ap.parse_args()
 
     if args.new:
         if not args.id:
             ap.error("--new requires --id")
-        ok = run_agent_loop(args.new, args.id, args.games)
+        ok = run_agent_loop(args.new, args.id, args.games, max_attempts=args.max_attempts)
         sys.exit(0 if ok else 1)
     run_batch(args.games)
 

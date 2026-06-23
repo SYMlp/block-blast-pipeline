@@ -9,10 +9,17 @@
 // same idea as Block Blast's ~97% A/B failure rate, made automatic and cheap).
 //
 // A REJECT is a SUCCESSFUL gate outcome, not a build error — so this exits 0 by
-// default and just reports. Use --strict to exit 1 when anything is rejected
-// (i.e. "block CI if someone tries to ship a variant that failed its gate").
+// default and just reports. Two ways to make it fail a build:
+//   --strict             exit 1 if ANYTHING is rejected (used by the agent loop:
+//                        "don't promote a candidate that failed its own gate").
+//   --check-expectations exit 1 only when an actual verdict ≠ the variant's
+//                        declared intent.expect. This is the CI guard: a variant
+//                        designed to PROMOTE that now REJECTs (or vice-versa) is
+//                        a regression. relaxed declares expect:REJECT, so the
+//                        deliberate counter-example does NOT redden CI — only a
+//                        genuine verdict drift does.
 // Variants with no intent block are skipped (not yet migrated to 3-layer DSL).
-// Run: node harness/verify/check-targets.js [variant_id] [--strict]
+// Run: node harness/verify/check-targets.js [variant_id] [--strict|--check-expectations]
 
 import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -48,6 +55,7 @@ function fmtBand([lo, hi]) {
 
 function main() {
   const strict = process.argv.includes('--strict');
+  const checkExpectations = process.argv.includes('--check-expectations');
   const only = process.argv.slice(2).find((a) => !a.startsWith('--')) || null;
 
   let run;
@@ -65,6 +73,7 @@ function main() {
   let rejected = 0;
   let skipped = 0;
   let noData = 0;
+  const mismatches = [];
 
   for (const file of files) {
     const cfg = JSON.parse(readFileSync(join(VARIANTS_DIR, file), 'utf8'));
@@ -89,7 +98,12 @@ function main() {
     const verdict = variantFails === 0 ? 'PROMOTE' : 'REJECT';
     if (variantFails === 0) promoted++; else rejected++;
 
-    console.log(`\n● ${cfg.variant_id} → ${verdict}${variantFails ? ` (${variantFails} target(s) out of band)` : ''}`);
+    const expect = cfg.intent.expect || null;
+    const drift = expect && expect !== verdict;
+    if (drift) mismatches.push({ id: cfg.variant_id, expect, verdict });
+
+    const expectTag = expect ? `  [expect ${expect}${drift ? ' ✗ DRIFT' : ' ✓'}]` : '';
+    console.log(`\n● ${cfg.variant_id} → ${verdict}${variantFails ? ` (${variantFails} target(s) out of band)` : ''}${expectTag}`);
     console.log(`  假设: ${cfg.intent.hypothesis}`);
     console.log('  ' + pad('proxy', 16) + pad('measured', 11) + pad('band', 15) + pad('verdict', 8) + 'represents');
     console.log('  ' + '-'.repeat(98));
@@ -105,6 +119,11 @@ function main() {
   console.log(`门禁裁决: ${promoted} 放行至真人 A/B  ·  ${rejected} 被淘汰` +
     (skipped ? `  ·  ${skipped} 未迁三层(跳过)` : '') + (noData ? `  ·  ${noData} 缺 sim 数据` : ''));
   if (noData > 0) process.exit(2);
+  if (checkExpectations && mismatches.length > 0) {
+    console.error(`\n--check-expectations: ${mismatches.length} verdict regression(s) → CI blocked.`);
+    for (const m of mismatches) console.error(`  ${m.id}: expected ${m.expect}, measured ${m.verdict}`);
+    process.exit(1);
+  }
   if (strict && rejected > 0) {
     console.error(`--strict: ${rejected} variant(s) rejected → CI blocked.`);
     process.exit(1);
