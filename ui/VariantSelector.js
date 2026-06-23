@@ -1,8 +1,8 @@
 // VariantSelector — renders the variant buttons + a live parameter diff table
 // (current variant vs control). Purely presentational; calls onSelect(id).
 
-const VARIANT_ORDER = ['control', 'compact', 'relaxed', 'hard-mode'];
-const VARIANT_NAMES = { control: '对照组', compact: '紧凑版', relaxed: '宽松版', 'hard-mode': '高难版' };
+const VARIANT_ORDER = ['control', 'compact', 'relaxed', 'hard-mode', 'ai-brisk'];
+const VARIANT_NAMES = { control: '对照组', compact: '紧凑版', relaxed: '宽松版', 'hard-mode': '高难版', 'ai-brisk': '明快·AI生成' };
 
 // Field paths shown in the diff table, in display order.
 const DIFF_FIELDS = [

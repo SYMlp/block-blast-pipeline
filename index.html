@@ -126,6 +126,6 @@ function loop() {
 }
 
 const start = new URLSearchParams(location.search).get('variant');
-switchVariant(['control', 'compact', 'relaxed', 'hard-mode'].includes(start) ? start : 'control');
+switchVariant(['control', 'compact', 'relaxed', 'hard-mode', 'ai-brisk'].includes(start) ? start : 'control');
 loop();
 </script>
