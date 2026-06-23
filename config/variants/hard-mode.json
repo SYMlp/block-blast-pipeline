@@ -1,6 +1,15 @@
 {
   "variant_id": "hard-mode",
   "variant_name": "高难版",
+  "intent": {
+    "hypothesis": "刻意贴近挫败崖:关掉 DDA、放大块、加难。挑战是有意的,但要验证它没掉到'秒死/纯被坑'的崖底。",
+    "targets": [
+      { "proxy": "rescueRate",    "band": [0, 0.15],    "represents": "公平底线 —— RNG 压力允许偏高,但不许高到'纯被坑'" },
+      { "proxy": "stepsP90",      "band": [8, 60],      "represents": "挫败崖底线 —— 局可以短,但不许短到'还没玩就死'" },
+      { "proxy": "clearRate",     "band": [0.3, 0.6],   "represents": "秩序节拍 —— 难,但仍给得出消除反馈" },
+      { "proxy": "rewardEntropy", "band": [0.2, null],  "represents": "惊喜供给 —— 难度不以牺牲惊喜为代价" }
+    ]
+  },
   "board": { "width": 8, "height": 8, "cell_size_px": 60 },
   "spawn": { "density": 0.65, "shape_set": "extended", "preview_count": 3, "big_piece_weight_mult": 2.0 },
   "scoring": { "placement_per_cell": 1, "clear_base_factor": 8, "combo_curve": "quadratic" },

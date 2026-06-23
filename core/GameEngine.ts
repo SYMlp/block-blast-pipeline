@@ -1,13 +1,14 @@
-// GameEngine — headless game core. Zero DOM. All parameters from config.
-// Drives board + pieces + scorer; the renderer reads its state, the harness
-// drives it step by step. Randomness is injected so sims are reproducible.
+// GameEngine — headless game core. Zero DOM, zero `cc`. All parameters from
+// config; the renderer reads its state, the harness drives it step by step.
+// Randomness is injected so sims are reproducible.
 
-import { createBoard, canPlace, canPlaceAnywhere, place, clearLines, occupancy, prefillDensity } from './board.js';
-import { buildPool, ddaPool, newPiece, COLORS } from './pieces.js';
-import { placementScore, clearScore } from './scorer.js';
+import { createBoard, canPlace, canPlaceAnywhere, place, clearLines, occupancy, prefillDensity } from './board';
+import { buildPool, ddaPool, newPiece, COLORS } from './pieces';
+import { placementScore, clearScore } from './scorer';
+import type { Board, Piece, ShapeDef, Rng, GameConfig, DifficultyConfig, MoveResult } from './types';
 
 // Mulberry32 — tiny deterministic PRNG. Same seed => same game.
-export function makeRng(seed) {
+export function makeRng(seed: number): Rng {
   let a = seed >>> 0;
   return function () {
     a |= 0;
@@ -18,8 +19,34 @@ export function makeRng(seed) {
   };
 }
 
+export interface EngineOptions {
+  seed?: number;
+  rng?: Rng | null;
+}
+
 export class GameEngine {
-  constructor(config, { seed = 1, rng = null } = {}) {
+  config: GameConfig;
+  width: number;
+  height: number;
+  previewCount: number;
+  colorCount: number;
+  pool: ShapeDef[];
+  density: number;
+  difficulty: DifficultyConfig;
+  rng: Rng;
+
+  board!: Board;
+  score!: number;
+  combo!: number;
+  gameOver!: boolean;
+  steps!: number;
+  linesCleared!: number;
+  refillCount!: number;
+  refillRetries!: number;
+  refillRescues!: number;
+  tray!: Array<Piece | null>;
+
+  constructor(config: GameConfig, { seed = 1, rng = null }: EngineOptions = {}) {
     this.config = config;
     this.width = config.board.width;
     this.height = config.board.height;
@@ -32,7 +59,7 @@ export class GameEngine {
     this.reset();
   }
 
-  reset() {
+  reset(): void {
     this.board = createBoard(this.width, this.height);
     // density: pre-fill the opening board to a target occupancy. Higher density
     // = more crowded start = harder. prefillDensity guards against completing a
@@ -59,12 +86,13 @@ export class GameEngine {
   // Solvability guarantee: keep redrawing until at least one tray piece fits.
   // Mirrors Block Blast's anti-deadlock rule; without it the headless sim
   // would log spurious dead games and poison the metrics.
-  refillTray() {
+  refillTray(): void {
     // DDA: bias the draw pool by current occupancy (crowded → small pieces to
     // rescue, sparse → big pieces to challenge). dda_enabled=false uses the
     // static pool. Pool is recomputed each refill so it tracks the live board.
     const pool = ddaPool(this.pool, occupancy(this.board), this.difficulty);
-    const draw = () => Array.from({ length: this.previewCount }, () => newPiece(pool, this.colorCount, this.rng));
+    const draw = (): Array<Piece | null> =>
+      Array.from({ length: this.previewCount }, () => newPiece(pool, this.colorCount, this.rng));
     let tray = draw();
     let retries = 0;
     while (retries < 30 && !tray.some((p) => p && canPlaceAnywhere(this.board, p.shape))) {
@@ -77,14 +105,14 @@ export class GameEngine {
     this.tray = tray;
   }
 
-  canPlace(piece, row, col) {
+  canPlace(piece: Piece, row: number, col: number): boolean {
     return canPlace(this.board, piece.shape, row, col);
   }
 
   // Enumerate all legal (trayIndex,row,col) placements. Used by the headless
   // greedy agent and by the "at least one legal move" invariant test.
-  legalMoves() {
-    const moves = [];
+  legalMoves(): Array<{ trayIndex: number; row: number; col: number }> {
+    const moves: Array<{ trayIndex: number; row: number; col: number }> = [];
     for (let i = 0; i < this.tray.length; i++) {
       const p = this.tray[i];
       if (!p) continue;
@@ -99,7 +127,7 @@ export class GameEngine {
 
   // Apply a placement. Returns a result the renderer uses to fire juice.
   // No-op (returns null) if the move is illegal or the game is over.
-  applyMove(trayIndex, row, col) {
+  applyMove(trayIndex: number, row: number, col: number): MoveResult | null {
     if (this.gameOver) return null;
     const piece = this.tray[trayIndex];
     if (!piece || !canPlace(this.board, piece.shape, row, col)) return null;
@@ -126,7 +154,7 @@ export class GameEngine {
     return { piece, row, col, lineCount, clearedCells, gain, combo: this.combo };
   }
 
-  checkGameOver() {
+  checkGameOver(): boolean {
     const hasPiece = this.tray.some((p) => p !== null);
     if (hasPiece && !this.tray.some((p) => p && canPlaceAnywhere(this.board, p.shape))) {
       this.gameOver = true;
@@ -134,7 +162,7 @@ export class GameEngine {
     return this.gameOver;
   }
 
-  occupancy() {
+  occupancy(): number {
     return occupancy(this.board);
   }
 }

@@ -6,6 +6,27 @@
   "properties": {
     "variant_id":   { "type": "string" },
     "variant_name": { "type": "string" },
+    "intent": {
+      "type": "object",
+      "description": "意图层:一句人话假设 + 该变体要命中的代理指标带。harness/verify 拿它和 last-run.json 的实测代理逐条比对——这是'人类感受↔程序参数'的双向锚。",
+      "required": ["hypothesis", "targets"],
+      "properties": {
+        "hypothesis": { "type": "string", "description": "人话:这个变体想验证什么感受假设" },
+        "targets": {
+          "type": "array",
+          "description": "每条 = 一个可测代理 + 期望落在的双边带 [地板, 天花板](null=该侧不设限)",
+          "items": {
+            "type": "object",
+            "required": ["proxy", "band", "represents"],
+            "properties": {
+              "proxy": { "type": "string", "enum": ["rescueRate", "clearRate", "rewardEntropy", "stepsP90", "stepsMedian", "avgEndOccupancy", "avgScore", "avgSteps", "avgLines"] },
+              "band": { "type": "array", "items": { "type": ["number", "null"] }, "minItems": 2, "maxItems": 2 },
+              "represents": { "type": "string", "description": "这个代理代表哪种人类感受" }
+            }
+          }
+        }
+      }
+    },
     "board": {
       "type": "object",
       "required": ["width", "height"],

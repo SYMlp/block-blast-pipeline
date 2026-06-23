@@ -7,11 +7,14 @@
   "scripts": {
     "test": "vitest run harness/unit",
     "test:watch": "vitest harness/unit",
+    "typecheck": "tsc --noEmit",
     "sim": "node harness/sim/headless-sim.js",
-    "sim:all": "node harness/sim/headless-sim.js --games 200"
+    "sim:all": "node harness/sim/headless-sim.js --games 200",
+    "verify": "node harness/verify/check-targets.js"
   },
   "devDependencies": {
     "fast-check": "^3.23.2",
+    "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   },
   "dependencies": {

@@ -1,0 +1,92 @@
+{
+  "generatedBy": "headless-sim",
+  "gamesPerVariant": 100,
+  "frameBudgetMs": 16,
+  "gate": {
+    "crashes": 0,
+    "worstStepMs": 0.6817999999999991,
+    "passed": true
+  },
+  "variants": [
+    {
+      "id": "ai-brisk",
+      "games": 100,
+      "crashes": 0,
+      "avgScore": 101.61,
+      "avgSteps": 6.89,
+      "avgLines": 3.82,
+      "clearRate": 0.4949201741654572,
+      "rescueRate": 0.09782608695652174,
+      "rewardEntropy": 0.5463317243190553,
+      "avgEndOccupancy": 0.5946938775510204,
+      "avgMaxCombo": 1.59,
+      "stepsMedian": 4,
+      "stepsP90": 17,
+      "worstStepMs": 0.6817999999999991
+    },
+    {
+      "id": "compact",
+      "games": 100,
+      "crashes": 0,
+      "avgScore": 140.6,
+      "avgSteps": 10.63,
+      "avgLines": 5.77,
+      "clearRate": 0.47695202257761055,
+      "rescueRate": 0.06532663316582915,
+      "rewardEntropy": 0.6008633608004749,
+      "avgEndOccupancy": 0.6028571428571433,
+      "avgMaxCombo": 1.83,
+      "stepsMedian": 5,
+      "stepsP90": 32,
+      "worstStepMs": 0.2149000000000001
+    },
+    {
+      "id": "control",
+      "games": 100,
+      "crashes": 0,
+      "avgScore": 62.48,
+      "avgSteps": 10.92,
+      "avgLines": 3.74,
+      "clearRate": 0.32875457875457875,
+      "rescueRate": 0.022058823529411766,
+      "rewardEntropy": 0.2504070684981225,
+      "avgEndOccupancy": 0.60390625,
+      "avgMaxCombo": 1.13,
+      "stepsMedian": 5,
+      "stepsP90": 20,
+      "worstStepMs": 0.24020000000000152
+    },
+    {
+      "id": "hard-mode",
+      "games": 100,
+      "crashes": 0,
+      "avgScore": 54.75,
+      "avgSteps": 4.1,
+      "avgLines": 1.85,
+      "clearRate": 0.4268292682926829,
+      "rescueRate": 0.06451612903225806,
+      "rewardEntropy": 0.31599713297842463,
+      "avgEndOccupancy": 0.6346875,
+      "avgMaxCombo": 1.01,
+      "stepsMedian": 2,
+      "stepsP90": 11,
+      "worstStepMs": 0.10829999999999984
+    },
+    {
+      "id": "relaxed",
+      "games": 100,
+      "crashes": 0,
+      "avgScore": 399.96,
+      "avgSteps": 83.16,
+      "avgLines": 21.81,
+      "clearRate": 0.25805675805675804,
+      "rescueRate": 0.000711490572749911,
+      "rewardEntropy": 0.12018434299374456,
+      "avgEndOccupancy": 0.6596,
+      "avgMaxCombo": 2.4,
+      "stepsMedian": 59,
+      "stepsP90": 173,
+      "worstStepMs": 0.4480000000000075
+    }
+  ]
+}

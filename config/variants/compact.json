@@ -1,6 +1,15 @@
 {
   "variant_id": "compact",
   "variant_name": "紧凑版",
+  "intent": {
+    "hypothesis": "缩到 7×7 高密对局:用更快的消除节奏和更多惊喜拉高投入,且不把玩家推过挫败崖。",
+    "targets": [
+      { "proxy": "rescueRate",    "band": [0, 0.12],    "represents": "公平感 —— 节奏快,但 RNG 仍未频繁逼到靠安全网救场" },
+      { "proxy": "clearRate",     "band": [0.4, 0.65],  "represents": "秩序节拍 —— 比基线更密的消除心跳" },
+      { "proxy": "rewardEntropy", "band": [0.4, null],  "represents": "惊喜供给 —— 清除规模更多变,多巴胺更足" },
+      { "proxy": "stepsP90",      "band": [15, 60],     "represents": "节奏/可中断 —— 仍落在碎片化时长内" }
+    ]
+  },
   "board": { "width": 7, "height": 7, "cell_size_px": 60 },
   "spawn": { "density": 0.7, "shape_set": "standard", "preview_count": 3, "big_piece_weight_mult": 1.2 },
   "scoring": { "placement_per_cell": 1, "clear_base_factor": 6, "combo_curve": "quadratic" },
